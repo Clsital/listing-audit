@@ -19,7 +19,6 @@ REPORT_TEMPLATE = {
         {"dimension": "color", "status": "pass", "finding": "图中为米白色连衣裙", "confidence": 0.9},
         {"dimension": "style", "status": "pass", "finding": "款式为收腰连衣裙", "confidence": 0.85},
         {"dimension": "detail", "status": "pass", "finding": "无夸大细节", "confidence": 0.8},
-        {"dimension": "copy", "status": "pass", "finding": "文案与图相符", "confidence": 0.75},
         {"dimension": "category", "status": "pass", "finding": "场景匹配女装类目", "confidence": 0.9},
     ],
     "summary": "图文相符，无明显客诉风险",
@@ -52,7 +51,7 @@ def test_parse_report_and_risk_policy_all_pass():
     report = parse_report(make_raw_report())
     assert report.consistent is True
     assert report.risk_level == "low"
-    assert len(report.checks) == 5
+    assert len(report.checks) == 4
 
 
 def test_parse_report_high_risk_on_color_mismatch():
@@ -129,7 +128,7 @@ def test_api_endpoint_returns_structured_report():
     body = resp.json()
     assert body["consistent"] is True
     assert body["risk_level"] == "low"
-    assert len(body["checks"]) == 5
+    assert len(body["checks"]) == 4
 
 
 def test_api_endpoint_rejects_non_image():

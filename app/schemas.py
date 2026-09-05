@@ -12,12 +12,15 @@ CheckStatus = Literal["pass", "mismatch", "not_verifiable"]
 
 
 class ProductInfo(BaseModel):
-    """待审核商品的结构化信息，来自商家后台或用户填写。"""
+    """待审核商品的结构化信息。
+
+    category/color 供图文一致性审核使用；纯文本的合规检测可缺省。
+    """
 
     title: str = Field(description="商品标题")
-    category: str = Field(description="类目，如：连衣裙")
-    color: str = Field(description="商品颜色，如：米白色")
-    selling_points: str = Field(default="", description="卖点文案，分号分隔，可为空")
+    category: str = Field(default="", description="类目，如：连衣裙")
+    color: str = Field(default="", description="商品颜色，如：米白色")
+    selling_points: str = Field(default="", description="卖点文案，可含换行")
 
 
 class CheckItem(BaseModel):

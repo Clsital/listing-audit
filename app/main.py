@@ -1,24 +1,26 @@
-"""FastAPI 入口：POST /api/audit 接收商品图与信息，返回结构化风险报告。"""
+"""FastAPI 入口：图文一致性审核 + 文案合规检测。"""
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 
+from app.compliance import ComplianceError, audit_copy
 from app.llm import OpenAICompatVisionClient, audit_listing, image_to_data_url
 from app.schemas import AuditError, AuditReport, ProductInfo
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
-app = FastAPI(title="listing-audit", version="0.1.0")
+app = FastAPI(title="listing-audit", version="0.2.0")
+
+
+def get_client() -> OpenAICompatVisionClient:
+    # 延迟构造，避免无配置环境下依赖解析即失败
+    return OpenAICompatVisionClient()
 
 
 def get_auditor():
-    """返回审核函数；测试通过 dependency_overrides 注入假实现。
-
-    模型客户端延迟到首次调用时构造，避免无配置环境下依赖解析即失败。
-    """
+    """返回审核函数；测试通过 dependency_overrides 注入假实现。"""
 
     def auditor(image_data_url: str, product: ProductInfo) -> AuditReport:
-        client = OpenAICompatVisionClient()
-        return audit_listing(image_data_url, product, client)
+        return audit_listing(image_data_url, product, get_client())
 
     return auditor
 
@@ -51,4 +53,17 @@ async def audit(
     try:
         return auditor(image_data_url, product)
     except AuditError as e:
+        raise HTTPException(502, detail=str(e)) from e
+
+
+@app.post("/api/compliance", response_model=object)
+async def compliance(
+    title: str = Form(...),
+    selling_points: str = Form(""),
+    client: OpenAICompatVisionClient = Depends(get_client),
+) -> dict:
+    product = ProductInfo(title=title, selling_points=selling_points)
+    try:
+        return audit_copy(product, client)
+    except ComplianceError as e:
         raise HTTPException(502, detail=str(e)) from e

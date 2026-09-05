@@ -75,6 +75,20 @@ class OpenAICompatVisionClient:
             "temperature": 0.2,
             "max_tokens": 2048,
         }
+        return self._post(payload)
+
+    def chat_text(self, prompt: str) -> str:
+        """纯文本调用（文案合规等不需要图片的场景）。"""
+        return self._post(
+            {
+                "model": self.model,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "max_tokens": 2048,
+            }
+        )
+
+    def _post(self, payload: dict) -> str:
         try:
             resp = httpx.post(
                 f"{self.base_url}/chat/completions",
@@ -96,8 +110,8 @@ def image_to_data_url(image_bytes: bytes, content_type: str) -> str:
     return f"data:{content_type};base64,{b64}"
 
 
-def parse_report(raw: str) -> AuditReport:
-    """从模型输出中提取 JSON 并校验。容忍 markdown 代码块包裹。"""
+def extract_json_object(raw: str) -> dict:
+    """从模型输出中提取 JSON 对象。容忍 markdown 代码块包裹。"""
     text = raw.strip()
     fenced = re.search(r"```(?:json)?\s*(.+?)\s*```", text, re.DOTALL)
     if fenced:
@@ -106,11 +120,18 @@ def parse_report(raw: str) -> AuditReport:
     if start == -1 or end == -1 or end <= start:
         raise AuditError("输出中未找到 JSON 对象")
     try:
-        data = json.loads(text[start : end + 1])
+        return json.loads(text[start : end + 1])
     except json.JSONDecodeError as e:
         raise AuditError(f"JSON 解析失败: {e}") from e
+
+
+def parse_report(raw: str) -> AuditReport:
+    """从模型输出中提取 JSON 并校验。容忍 markdown 代码块包裹。"""
+    data = extract_json_object(raw)
     try:
         return apply_risk_policy(AuditReport.model_validate(data))
+    except AuditError:
+        raise
     except Exception as e:
         raise AuditError(f"不符合报告 schema: {e}") from e
 
