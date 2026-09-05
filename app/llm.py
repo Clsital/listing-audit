@@ -20,6 +20,22 @@ DEFAULT_MAX_ATTEMPTS = 3
 RETRY_SLEEP_SECONDS = 1.0
 
 
+def _load_dotenv(path: str = ".env") -> None:
+    """把 .env 的 KEY=VALUE 注入进程环境；已存在的环境变量优先。"""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key, value = key.strip(), value.strip().strip("'\"")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except FileNotFoundError:
+        pass
+
+
 class VisionClient(Protocol):
     def chat(self, image_data_url: str, prompt: str) -> str: ...
 
@@ -32,6 +48,7 @@ class OpenAICompatVisionClient:
         model: str | None = None,
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
     ):
+        _load_dotenv()
         self.api_key = api_key or os.environ.get("LLM_API_KEY", "")
         self.base_url = (
             base_url or os.environ.get("LLM_BASE_URL", "")
