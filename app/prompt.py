@@ -67,6 +67,46 @@ def build_compliance_prompt(product: ProductInfo, error_hint: str | None = None)
     return prompt
 
 
+_QC_TEMPLATE = """你是资深电商视觉设计师的质检助手。下面这张图是 AIGC 工具生成的服装模特候选图，
+请按设计师的人工质检清单逐项检查，找出问题并给出处理判定，只输出一个 JSON 对象。
+
+检查类别（category 固定取值）与要点：
+- body 人体结构：手指数量与形态、四肢关节、面部五官与对称性、牙齿、耳朵——放大看细节
+- garment 服装保真：颜色、款式（领型/袖型/长短）、纽扣/印花/蕾丝等细节、面料质感是否与商品信息一致；生成图最常见的失败是服装被"AI 重绘"导致细节漂移
+- lighting 光影构图：光源方向是否自洽、投影是否正确、是否存在过曝/死黑
+- artifact AI 伪影：布料纹理重复、发丝/边缘融蚀、背景元素扭曲融化、皮肤塑料感
+- text 文字：图中任何文字（品牌 logo、吊牌、背景招牌）是否乱码或无意义字符
+- scene 场景：背景与道具是否合理（家具/植物/地面透视是否变形）
+
+严重程度（severity）：
+- blocker：消费者一眼可见的硬伤（六指、面部扭曲、文字乱码）——必须重新生成
+- major：需要修图的明确问题（服装细节漂移、局部伪影）——可以修图解决
+- minor：可接受的轻微瑕疵（轻微纹理重复、背景小瑕疵）
+
+每个问题输出：category、severity、location（图中位置，如"右手手指"）、finding（引用图中可见证据，中文）、suggestion（修图思路或重生成时 prompt 要避开什么）、confidence（0-1）。
+没有问题的类别不要输出；全部通过时 issues 为空数组。
+只输出 JSON：{{"issues": [{{...}}], "summary": "面向设计师的一句话结论，说明这张图能不能用、重点修哪里"}}
+
+商品信息（用于服装保真核对）：
+- 标题：{title}
+- 类目：{category}
+- 颜色：{color}
+- 卖点：{selling_points}
+"""
+
+
+def build_qc_prompt(product: ProductInfo, error_hint: str | None = None) -> str:
+    prompt = _QC_TEMPLATE.format(
+        title=product.title or "（未提供）",
+        category=product.category or "（未提供）",
+        color=product.color or "（未提供）",
+        selling_points=product.selling_points or "（未提供）",
+    )
+    if error_hint:
+        prompt += _RETRY_HINT.format(error=error_hint)
+    return prompt
+
+
 def build_audit_prompt(product: ProductInfo, error_hint: str | None = None) -> str:
     prompt = _PROMPT_TEMPLATE.format(
         title=product.title,

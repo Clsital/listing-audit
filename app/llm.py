@@ -12,8 +12,9 @@ from typing import Protocol
 
 import httpx
 
-from app.prompt import build_audit_prompt
+from app.prompt import build_audit_prompt, build_qc_prompt
 from app.schemas import AuditError, AuditReport, ProductInfo, apply_risk_policy
+from app.qc import QcReport, apply_verdict_policy
 
 DEFAULT_TIMEOUT_SECONDS = 60.0
 DEFAULT_MAX_ATTEMPTS = 3
@@ -155,3 +156,37 @@ def audit_listing(
             continue
         return report
     raise AuditError(f"重试 {max_attempts} 次后仍未获得合法报告，最后一次错误: {last_error}")
+
+
+def parse_qc_report(raw: str) -> QcReport:
+    """解析出图质检报告：{"issues": [...], "summary": "..."}。"""
+    data = extract_json_object(raw)
+    from app.qc import QcReport as _QcReport
+
+    try:
+        return apply_verdict_policy(_QcReport.model_validate(data))
+    except AuditError:
+        raise
+    except Exception as e:
+        raise AuditError(f"不符合质检报告 schema: {e}") from e
+
+
+def qc_image(
+    image_data_url: str,
+    product: ProductInfo,
+    client: VisionClient,
+    max_attempts: int = DEFAULT_MAX_ATTEMPTS,
+) -> QcReport:
+    """AIGC 出图质检：按设计师质检清单初筛生成图。"""
+    last_error = ""
+    for attempt in range(max_attempts):
+        prompt = build_qc_prompt(product, error_hint=last_error or None)
+        try:
+            raw = client.chat(image_data_url, prompt)
+            return parse_qc_report(raw)
+        except AuditError as e:
+            last_error = str(e)
+            if attempt < max_attempts - 1:
+                time.sleep(RETRY_SLEEP_SECONDS)
+            continue
+    raise AuditError(f"重试 {max_attempts} 次后仍未获得合法质检报告，最后一次错误: {last_error}")

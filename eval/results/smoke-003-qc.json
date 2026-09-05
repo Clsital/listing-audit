@@ -1,0 +1,15 @@
+{
+  "case": "出图质检首测（真实商品模特图）",
+  "input": {
+    "image": "连衣裙模特图（浅粉色，画面含手提包与编织袋道具）",
+    "sku": "法式方领泡泡袖系带连衣裙 / 浅粉色 / 系带蝴蝶结;蕾丝裙摆;泡泡袖"
+  },
+  "verdict": "retouch（需修图）",
+  "findings": [
+    {"severity": "major", "category": "body", "location": "右手", "finding": "手指结构融合，食指中指无法分离，与包带粘连"},
+    {"severity": "major", "category": "garment", "location": "裙摆蕾丝边缘", "finding": "蕾丝纹理局部重复、边缘融蚀，与'精致蕾丝裙摆'描述有偏差"},
+    {"severity": "minor", "category": "artifact", "location": "裙摆与地面交界", "finding": "布料纹理轻微重复，交界模糊融蚀"},
+    {"severity": "minor", "category": "lighting", "location": "脚部投影", "finding": "投影模糊断裂，与整体柔光衔接不自然"}
+  ],
+  "conclusion": "命中 AIGC 图经典缺陷（手部粘连、蕾丝纹理漂移、阴影断层），判定与修图建议具体可执行——设计师人工初筛流程的自动化复现"
+}

@@ -29,6 +29,23 @@ export interface ComplianceReport {
   summary: string
 }
 
+export type QcVerdict = 'usable' | 'retouch' | 'regenerate'
+
+export interface QcIssue {
+  category: string
+  severity: 'blocker' | 'major' | 'minor'
+  location: string
+  finding: string
+  suggestion: string | null
+  confidence: number
+}
+
+export interface QcReport {
+  verdict: QcVerdict
+  issues: QcIssue[]
+  summary: string
+}
+
 async function handle<T>(resp: Response): Promise<T> {
   if (!resp.ok) {
     const body = await resp.json().catch(() => ({}))
@@ -37,22 +54,30 @@ async function handle<T>(resp: Response): Promise<T> {
   return resp.json()
 }
 
+function form(data: Record<string, string>): FormData {
+  const fd = new FormData()
+  for (const [k, v] of Object.entries(data)) fd.append(k, v)
+  return fd
+}
+
+export async function qcImage(
+  file: File,
+  data: { title: string; category: string; color: string; selling_points: string },
+): Promise<QcReport> {
+  const fd = form(data)
+  fd.append('image', file)
+  return handle(await fetch('/api/qc', { method: 'POST', body: fd }))
+}
+
 export async function auditImage(
   file: File,
   data: { title: string; category: string; color: string; selling_points: string },
 ): Promise<AuditReport> {
-  const fd = new FormData()
+  const fd = form(data)
   fd.append('image', file)
-  fd.append('title', data.title)
-  fd.append('category', data.category)
-  fd.append('color', data.color)
-  fd.append('selling_points', data.selling_points)
   return handle(await fetch('/api/audit', { method: 'POST', body: fd }))
 }
 
 export async function checkCopy(title: string, points: string): Promise<ComplianceReport> {
-  const fd = new FormData()
-  fd.append('title', title)
-  fd.append('selling_points', points)
-  return handle(await fetch('/api/compliance', { method: 'POST', body: fd }))
+  return handle(await fetch('/api/compliance', { method: 'POST', body: form({ title, points }) }))
 }
