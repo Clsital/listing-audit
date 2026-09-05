@@ -1,0 +1,16 @@
+{
+  "case": "基线：商品信息与图片相符",
+  "input": {
+    "image": "D:\下载\O1CN01vIhGCr1TELsfGCoJk_!!2211276342350.webp",
+    "title": "法式方领泡泡袖系带连衣裙",
+    "category": "连衣裙",
+    "color": "浅粉色",
+    "selling_points": "系带蝴蝶结;蕾丝裙摆;泡泡袖"
+  },
+  "actual": {
+    "consistent": true,
+    "risk_level": "low",
+    "detail_check_finding": "图片中可见领口细系带、裙摆蕾丝边以及泡泡袖设计，与卖点中的'系带蝴蝶结、蕾丝裙摆、泡泡袖'不矛盾。"
+  },
+  "conclusion": "五个维度引用图中可见证据逐项核对，全部 pass"
+}

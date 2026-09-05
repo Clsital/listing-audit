@@ -1,0 +1,23 @@
+{
+  "case": "故意把颜色字段写成'深蓝色'，图片实为浅粉色",
+  "input": {
+    "image": "D:\下载\O1CN01vIhGCr1TELsfGCoJk_!!2211276342350.webp",
+    "title": "法式方领泡泡袖系带连衣裙",
+    "category": "连衣裙",
+    "color": "深蓝色（故意写错）",
+    "selling_points": "系带蝴蝶结;蕾丝裙摆;泡泡袖"
+  },
+  "expectation": "color 维度 mismatch，risk_level=high，其余维度 pass",
+  "actual": {
+    "consistent": false,
+    "risk_level": "high",
+    "color_check": {
+      "status": "mismatch",
+      "confidence": 0.99,
+      "finding": "图中连衣裙为浅粉色/裸粉色，而商品信息中颜色字段为深蓝色，颜色明显不符。",
+      "suggestion": "请将商品颜色字段修改为浅粉色，或更换为深蓝色商品图，确保颜色与信息一致。"
+    },
+    "other_dimensions": "style/detail/copy/category 全部 pass，未受干扰"
+  },
+  "conclusion": "对抗样例按预期命中：模型在 color 维度以 0.99 置信度检出 mismatch 并给出整改建议，风险分级规则（颜色不符且置信度>=0.7 → high）由代码正确触发"
+}
