@@ -71,10 +71,19 @@ uv run pytest -v
 ## 路线图
 
 - [x] 第 1 周：图文一致性后端（schema 约束、重试、风险分级、CLI、单元测试）
-- [x] 第 2 周前半：文案合规模块（词表 + LLM 双层、去重合并、降级策略）
-- [ ] 第 2 周后半：React 双检工作台 + 评测集跑批
-- [ ] 第 3 周：公网部署 + Langfuse 追踪接入 + README 评测结果表
+- [x] 第 2 周：文案合规模块（词表 + LLM 双层、去重合并、降级策略）；React 双检工作台；评测跑批脚本
+- [ ] 第 3 周：评测集扩充（12-20 条）+ 公网部署 + Langfuse 追踪接入 + README 评测结果表
 - [ ] 加餐：图 vs 图对比（主图 vs 白底图，检测大货改版未更新素材）；竞品主图拆解
+
+## 前端开发
+
+```bash
+# 终端 1：后端
+uv run uvicorn app.main:app --reload
+# 终端 2：前端（/api 自动代理到 8000 端口）
+cd web && npm install && npm run dev
+# 打开 http://localhost:5173
+```
 
 ## 诚实声明
 

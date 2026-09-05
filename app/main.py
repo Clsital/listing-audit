@@ -1,5 +1,6 @@
 """FastAPI 入口：图文一致性审核 + 文案合规检测。"""
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.compliance import ComplianceError, audit_copy
 from app.llm import OpenAICompatVisionClient, audit_listing, image_to_data_url
@@ -9,6 +10,12 @@ MAX_IMAGE_BYTES = 10 * 1024 * 1024
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 app = FastAPI(title="listing-audit", version="0.2.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_client() -> OpenAICompatVisionClient:

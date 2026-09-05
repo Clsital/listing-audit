@@ -1,3 +1,3 @@
-image,consistent,category,color,selling_points,note
-samples/001.jpg,1,连衣裙,米白色,雪纺;收腰,人工标注：相符
-samples/002.jpg,0,连衣裙,米白色,雪纺;收腰,人工标注：图中为深蓝色，颜色不符
+image,expected_consistent,title,category,color,selling_points
+samples/001.jpg,1,法式收腰碎花连衣裙,连衣裙,米白色,雪纺;收腰显瘦
+samples/002.jpg,0,法式收腰碎花连衣裙,连衣裙,米白色,雪纺;收腰显瘦
