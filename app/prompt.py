@@ -18,7 +18,7 @@ _PROMPT_TEMPLATE = """你是电商平台的图文一致性审核员。下面是�
 - confidence：0 到 1 之间的置信度
 
 规则：
-1. 图片或商品信息无法支持判断时，status 必须填 not_verifiable，禁止猜测。
+1. 图片或商品信息无法支持判断时，status 必须填 not_verifiable，禁止猜测。特别地：图片为黑白/灰度/单色滤镜时，无法确认真实颜色，color 维度必须输出 not_verifiable，禁止判为 pass。
 2. 找不到任何问题时，checks 必须覆盖 color、style、detail、category 四个必检维度（status 为 pass）。
 3. 只输出 JSON：{{"checks": [{{...}}], "summary": "一句话总结，面向商家"}}
 

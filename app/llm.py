@@ -15,6 +15,7 @@ import httpx
 from app.prompt import build_audit_prompt, build_qc_prompt
 from app.schemas import AuditError, AuditReport, ProductInfo, apply_risk_policy
 from app.qc import QcReport, apply_verdict_policy
+from app.tracing import trace_llm_call
 
 DEFAULT_TIMEOUT_SECONDS = 60.0
 DEFAULT_MAX_ATTEMPTS = 3
@@ -90,6 +91,7 @@ class OpenAICompatVisionClient:
         )
 
     def _post(self, payload: dict) -> str:
+        start = time.perf_counter()
         try:
             resp = httpx.post(
                 f"{self.base_url}/chat/completions",
@@ -99,11 +101,28 @@ class OpenAICompatVisionClient:
             )
             resp.raise_for_status()
         except httpx.HTTPError as e:
+            trace_llm_call(
+                name="chat.completions",
+                model=self.model,
+                input_payload=payload["messages"],
+                latency_ms=int((time.perf_counter() - start) * 1000),
+                error=f"模型接口调用失败: {e}",
+            )
             raise AuditError(f"模型接口调用失败: {e}") from e
         try:
-            return resp.json()["choices"][0]["message"]["content"]
+            body = resp.json()
+            content = body["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as e:
             raise AuditError(f"模型响应结构异常: {e}") from e
+        trace_llm_call(
+            name="chat.completions",
+            model=self.model,
+            input_payload=payload["messages"],
+            output=content,
+            usage=body.get("usage"),
+            latency_ms=int((time.perf_counter() - start) * 1000),
+        )
+        return content
 
 
 def image_to_data_url(image_bytes: bytes, content_type: str) -> str:

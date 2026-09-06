@@ -62,11 +62,42 @@ uv run pytest -v
 
 ## 评测
 
-`eval/results/` 记录冒烟测试实证：
-- `smoke-000`：图文相符基线 → 全 pass
-- `smoke-001`：对抗样例（颜色写错）→ color mismatch @0.99，risk=high
-- `smoke-002`：合规双实测 → 真实文案 0 误报；注入 6 类违规全命中（5 词表 + 1 LLM 上下文捕获"医美级面料"）
-- `smoke-003`：出图质检首测 → 命中手部粘连、蕾丝纹理漂移、投影断层等 AIGC 经典缺陷，判定"需修图"并给出可执行修图建议
+`eval/results/` 记录全部实证（标签按构造确定，方法与歧义样本处理见下）：
+
+| 模块 | 用例 | 结果 |
+| --- | --- | --- |
+| 文案合规 | 10 条（5 条真实格式正常文案 + 5 条注入违规） | **10/10 = 100%**（0 误报，违规全检出） |
+| 图文核对 | 3 条（相符基线 / 颜色字段写错 / 灰度图） | **3/3 = 100%**（错色 mismatch @0.99 命中） |
+| 出图质检 | 首测 1 张真实模特图 | 命中手部粘连、蕾丝纹理漂移、投影断层，判定"需修图" |
+
+评测方法说明（诚实记录）：
+- 违规用例由本人注入已知违禁词构造，标签无争议；正常文案取自真实工作格式。
+- 首版用 PIL 色相旋转合成的"变色裙子"样本被废弃：浅粉色饱和度低，色相旋转后裙子仍近白色，标签歧义（模型判"相符"并无明显错误）。改用"同一张图 + 写错颜色字段"构造标签确定的错色用例。
+- 灰度样例曾暴露一个真实提示词缺口：模型把黑白图的颜色判为 pass。已按"禁止猜测"原则补充规则（灰度图 color 必须输出 not_verifiable），并修正标签语义（灰度≠不符）。
+- 样本量小（13 条），是演示级评测而非统计显著的基准；扩展方法见 `eval/`。
+
+## Langfuse 追踪
+
+配置以下环境变量后，每次模型调用（prompt、输出、token 用量、耗时、错误）自动记录到 Langfuse：
+
+```bash
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com   # 或自托管地址
+```
+
+未配置时追踪为 no-op，不影响任何功能。Langfuse 免费云版注册即用；本项目向 langfuse-python 贡献过代码（PR #1862 协作中），生产链路即跑在 Langfuse 追踪之上。
+
+## 部署（单容器，约 10 分钟）
+
+前端静态文件由 FastAPI 直接托管，一个容器即包含全部功能。
+
+1. 注册 [Hugging Face](https://huggingface.co)（免费）→ New Space → 选 **Docker** SDK → 空白模板；
+2. 把本仓库文件推入 Space 仓库（git clone Space 地址 → 复制文件 → push）；把 `deploy/space-README-header.md` 的 front-matter 粘贴到 Space 仓库 README.md 最顶部；
+3. Space → Settings → Secrets 添加：`LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`（可选 `LANGFUSE_PUBLIC_KEY/SECRET_KEY/HOST`）；
+4. 等待构建完成，访问 `https://<你的用户名>-listing-audit.hf.space`。
+
+Dockerfile 为两阶段构建（Node 打包前端 → Python 运行时），也可部署到任何支持 Docker 的平台。
 
 ## 路线图
 
@@ -74,7 +105,7 @@ uv run pytest -v
 - [x] 文案合规模块（词表 + LLM 双层、去重合并、降级策略）
 - [x] React 三标签工作台（深色主题）+ 评测跑批脚本
 - [x] 出图质检模块（六类缺陷清单、verdict 分级策略）+ 首测命中 AIGC 经典缺陷
-- [ ] 评测集扩充（QC 用 AIGC 生成图自标注）+ 公网部署 + Langfuse 追踪 + 准确率表
+- [x] Langfuse 追踪（可选配置）+ 单容器 Docker 部署 + 评测准确率表
 - [ ] 加餐：图 vs 图对比（生成图 vs 白底图服装保真）；竞品主图拆解 brief
 
 ## 前端开发

@@ -24,7 +24,8 @@ class EvalCase(BaseModel):
 class EvalResult(BaseModel):
     inputs: dict
     expected: bool
-    actual: bool
+    # None 表示该条运行失败（模型/网络异常），按未命中计
+    actual: bool | None
     detail: dict
 
 
@@ -90,6 +91,8 @@ def run_vision_eval(
         expected = _to_bool(row["expected_consistent"])
         try:
             report = auditor(data_url, product)
+            if hasattr(report, "model_dump"):
+                report = report.model_dump()
             actual = report["consistent"]
             detail = {"risk_level": report.get("risk_level", "")}
         except Exception as e:  # noqa: BLE001 - 单条失败计入结果，不中断跑批
@@ -123,6 +126,8 @@ def run_compliance_eval(
         expected = _to_bool(row["expected_clean"])
         try:
             report = checker(product)
+            if hasattr(report, "model_dump"):
+                report = report.model_dump()
             actual = report["clean"]
             detail = {"terms": [v["term"] for v in report.get("violations", [])]}
         except Exception as e:  # noqa: BLE001

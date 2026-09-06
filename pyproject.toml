@@ -9,6 +9,8 @@ dependencies = [
     "httpx>=0.27",
     "pydantic>=2.7",
     "python-multipart>=0.0.9",
+    "langfuse>=3,<7",
+    "pillow>=10",
 ]
 
 [dependency-groups]

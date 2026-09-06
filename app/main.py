@@ -1,6 +1,9 @@
 """FastAPI 入口：图文一致性审核 + 文案合规检测。"""
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.compliance import ComplianceError, audit_copy
 from app.llm import OpenAICompatVisionClient, audit_listing, image_to_data_url, qc_image
@@ -102,3 +105,9 @@ async def qc(
         return qc_image(image_data_url, product, client)
     except AuditError as e:
         raise HTTPException(502, detail=str(e)) from e
+
+
+# 单容器部署：构建过前端时，由 FastAPI 直接托管静态页面（API 路由优先）
+_DIST = Path(__file__).resolve().parents[1] / "web" / "dist"
+if _DIST.is_dir():
+    app.mount("/", StaticFiles(directory=_DIST, html=True), name="web")
