@@ -42,7 +42,7 @@ def health() -> dict:
 
 
 @app.post("/api/audit", response_model=AuditReport)
-async def audit(
+def audit(
     image: UploadFile = File(...),
     title: str = Form(...),
     category: str = Form(...),
@@ -52,7 +52,8 @@ async def audit(
 ) -> AuditReport:
     if image.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(415, detail=f"仅支持 {sorted(ALLOWED_IMAGE_TYPES)}")
-    image_bytes = await image.read()
+    # 线程池中同步读取；批量质检时多个请求可真正并发
+    image_bytes = image.file.read()
     if not image_bytes:
         raise HTTPException(400, detail="图片内容为空")
     if len(image_bytes) > MAX_IMAGE_BYTES:
@@ -68,7 +69,7 @@ async def audit(
 
 
 @app.post("/api/compliance", response_model=object)
-async def compliance(
+def compliance(
     title: str = Form(...),
     selling_points: str = Form(""),
     client: OpenAICompatVisionClient = Depends(get_client),
@@ -81,7 +82,7 @@ async def compliance(
 
 
 @app.post("/api/qc", response_model=QcReport)
-async def qc(
+def qc(
     image: UploadFile = File(...),
     title: str = Form(""),
     category: str = Form(""),
@@ -92,7 +93,8 @@ async def qc(
     """AIGC 出图质检：初筛生成图的人体结构、服装保真、AI 伪影等问题。"""
     if image.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(415, detail=f"仅支持 {sorted(ALLOWED_IMAGE_TYPES)}")
-    image_bytes = await image.read()
+    # 线程池中同步读取；批量质检时多个请求可真正并发
+    image_bytes = image.file.read()
     if not image_bytes:
         raise HTTPException(400, detail="图片内容为空")
     if len(image_bytes) > MAX_IMAGE_BYTES:
