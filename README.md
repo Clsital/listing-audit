@@ -1,3 +1,5 @@
+[![CI](https://github.com/luo22833548/listing-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/luo22833548/listing-audit/actions/workflows/ci.yml)
+
 # listing-audit · AIGC 出图质检台
 
 设计师的自用工具：**AIGC 生成图批量自动初筛**（一次 ≤20 张，3 路并发；人体结构/服装保真/AI 伪影 → 可直接用 / 需修图 / 建议重生成）+ **上架前图文核对** + **文案合规**（极限词双层检测）。
