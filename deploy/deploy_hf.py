@@ -22,10 +22,10 @@ DEFAULT_ENDPOINT = "https://huggingface.co"
 DEFAULT_PROXY = "http://127.0.0.1:7890"
 
 # 上传到 Space 的内容；README 会被加上 HF 需要的 front-matter
+# IGNORE_DIRS 按路径中的任意一段匹配（basename 或相对前缀均可）
 IGNORE_DIRS = {
     ".git", ".venv", "__pycache__", ".pytest_cache",
-    "web/node_modules", "web/dist",
-    "eval/samples", "eval/results", "eval/__pycache__",
+    "node_modules", "dist", "samples", "results",
 }
 IGNORE_FILES = {".env", ".dockerignore", "deploy/space-README-header.md"}
 
