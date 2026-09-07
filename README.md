@@ -1,4 +1,4 @@
-[![CI](https://github.com/luo22833548/listing-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/luo22833548/listing-audit/actions/workflows/ci.yml)
+[![CI](https://github.com/Clsital/listing-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/Clsital/listing-audit/actions/workflows/ci.yml)
 
 # listing-audit · AIGC 出图质检台
 
